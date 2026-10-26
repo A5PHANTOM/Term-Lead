@@ -1,9 +1,10 @@
 import { neon } from '@neondatabase/serverless';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  if (!process.env.DATABASE_URL || !process.env.APP_PASSWORD) return res.status(503).json({error:'Cloud storage is not configured.'});
+  const databaseUrl = process.env.DATABASE_URL || process.env.termleads_DATABASE_URL || process.env.POSTGRES_URL;
+  if (!databaseUrl || !process.env.APP_PASSWORD) return res.status(503).json({error:'Cloud storage is not configured.'});
   if (req.headers.authorization !== `Bearer ${process.env.APP_PASSWORD}`) return res.status(401).json({error:'Enter your workspace password to connect.'});
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = neon(databaseUrl);
   try {
     await sql`CREATE TABLE IF NOT EXISTS termjobs_leads (id TEXT PRIMARY KEY, data JSONB NOT NULL)`;
     if (req.method === 'GET') { const rows = await sql`SELECT data FROM termjobs_leads`; return res.json(rows.map(r=>r.data)); }
