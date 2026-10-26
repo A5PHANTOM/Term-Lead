@@ -17,10 +17,9 @@ Import this directory as a Vercel project (Vite preset), or run `npx vercel --pr
 
 1. Create a Neon Postgres database (including through Vercel Marketplace).
 2. Set `DATABASE_URL` to its pooled connection URL in Vercel environment variables.
-3. Set `APP_PASSWORD` to a strong private workspace password. Redeploy after setting variables.
-4. Sign in with that password once. This browser stays signed in through a secure HttpOnly cookie that renews for a year on every authenticated cloud request. Clearing cookies or using a different browser requires signing in again. The database table is created automatically.
+3. Redeploy. The database table is created automatically. The app loads and saves cloud data automatically with no sign-in.
 
-Without these variables, data persists in localStorage on the same browser/device. Clearing browser data removes those records. Export CSV for a backup. Connecting cloud switches to the cloud dataset; export local records first. The app does not silently upload local records. The app loads cloud records automatically on every visit after sign-in. Saving requires a working cloud session; a failed connection never silently saves only to the device. Existing browser records are retained in a local backup when first connecting. This is a single shared private workspace, not a multi-user account system. Callback dates appear in the dashboard; the app does not send background notifications.
+Anyone with the app URL can view and edit this shared workspace. Database credentials stay on the server. The app requires a working cloud connection to save; it never silently falls back to device-only saves. Previously cached browser leads remain in a local backup. Callback dates appear in the dashboard; the app does not send background notifications.
 
 For iPhone, use Safari → Share → Add to Home Screen. Tap a phone number or callback phone button to call. The mobile input fields use 16px text to avoid Safari zoom.
 

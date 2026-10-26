@@ -2,14 +2,13 @@ import assert from 'node:assert/strict';
 import { randomUUID, randomInt } from 'node:crypto';
 import handler from '../api/leads.js';
 const base = process.argv[2];
-assert.ok(process.env.APP_PASSWORD || process.env.VERIFY_COOKIE, 'Workspace authentication must be configured');
 async function request(method, lead) {
   if(base){
-    const response=await fetch(new URL('/api/leads'+(method==='DELETE'?'?id='+encodeURIComponent(lead.id):''),base),{method,headers:{...(process.env.VERIFY_COOKIE?{Cookie:process.env.VERIFY_COOKIE}:{Authorization:`Bearer ${process.env.APP_PASSWORD}`}), 'Content-Type':'application/json'},body:method==='PUT'?JSON.stringify(lead):undefined});
+    const response=await fetch(new URL('/api/leads'+(method==='DELETE'?'?id='+encodeURIComponent(lead.id):''),base),{method,headers:{'Content-Type':'application/json'},body:method==='PUT'?JSON.stringify(lead):undefined});
     return {status:response.status,body:await response.json()};
   }
   const res={statusCode:200,setHeader(){},status(code){this.statusCode=code;return this;},json(body){this.body=body;return this;},end(){return this;}};
-  await handler({method,headers:{authorization:`Bearer ${process.env.APP_PASSWORD}`},body:lead,query:{id:lead?.id}},res);
+  await handler({method,headers:{},body:lead,query:{id:lead?.id}},res);
   return {status:res.statusCode,body:res.body};
 }
 const initial=await request('GET');assert.equal(initial.status,200,'Database read failed');assert.ok(Array.isArray(initial.body));
