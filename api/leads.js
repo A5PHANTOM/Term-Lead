@@ -1,9 +1,10 @@
 import { neon } from '@neondatabase/serverless';
+import { authenticated } from '../lib/auth.js';
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const databaseUrl = process.env.DATABASE_URL || process.env.termleads_DATABASE_URL || process.env.POSTGRES_URL;
   if (!databaseUrl || !process.env.APP_PASSWORD) return res.status(503).json({error:'Cloud storage is not configured.'});
-  if (req.headers.authorization !== `Bearer ${process.env.APP_PASSWORD}`) return res.status(401).json({error:'Enter your workspace password to connect.'});
+  if (!authenticated(req)) return res.status(401).json({error:'Enter your workspace password to connect.'});
   const sql = neon(databaseUrl);
   try {
     await sql`CREATE TABLE IF NOT EXISTS termjobs_leads (id TEXT PRIMARY KEY, data JSONB NOT NULL)`;
