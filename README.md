@@ -1,6 +1,6 @@
 # Termjobs Leads
 
-A responsive lead and callback workspace with duplicate phone detection, search, seven call statuses, editable notes, callback dates, CSV export, and a custom SVG logo/favicon.
+A responsive lead and callback workspace with duplicate phone detection, search, eight call statuses (including Busy), editable notes, callback dates, CSV export, and a custom SVG logo/favicon.
 
 ## Run
 

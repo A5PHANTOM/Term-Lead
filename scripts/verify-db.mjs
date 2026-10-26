@@ -18,9 +18,9 @@ const lead={id,company:'Connection check (temporary)',phone,status:'Not called',
 try {
   assert.equal((await request('PUT',lead)).status,200,'Database insert failed');
   assert.ok((await request('GET')).body.some(l=>l.id===id),'Inserted record could not be read');
-  lead.notes='Update confirmed';lead.status='Picked up';
+  lead.notes='Update confirmed';lead.status='Busy';
   assert.equal((await request('PUT',lead)).status,200,'Database update failed');
-  const found=(await request('GET')).body.find(l=>l.id===id);assert.equal(found.notes,'Update confirmed');assert.equal(found.status,'Picked up');
+  const found=(await request('GET')).body.find(l=>l.id===id);assert.equal(found.notes,'Update confirmed');assert.equal(found.status,'Busy');
   assert.equal((await request('PUT',{...lead,id:'duplicate-'+id})).status,409,'Duplicate phone protection failed');
 } finally {
   assert.equal((await request('DELETE',{id})).status,200,'Temporary record cleanup failed');
