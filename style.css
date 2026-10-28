@@ -18,3 +18,77 @@
 .connection-notice{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px;padding:12px 16px;background:#fff;border:1px solid #ddd;border-radius:9px}.connection-notice>div{display:flex;align-items:center;gap:9px;font-size:12px;color:#555}.connection-notice .secondary{margin:0;white-space:nowrap;min-height:40px}@media(max-width:700px){.connection-notice{flex-direction:column;align-items:stretch;padding:14px}.connection-notice>div{font-size:13px;line-height:1.6}.connection-notice .secondary{min-height:46px}}
 /* Custom TJ monogram and restrained wordmark. */
 .brand{gap:11px;letter-spacing:-1.4px;font-weight:800;color:#111;line-height:1.1}.brand img{width:40px;height:40px;flex-shrink:0}.brand-sub{font-family:'DM Sans',-apple-system,sans-serif;font-size:8px;font-weight:600;letter-spacing:4px;color:#666;margin-top:7px;padding-left:2px}@media(max-width:1000px) and (min-width:701px){.brand{gap:8px;font-size:22px}.brand img{width:34px;height:34px}.brand-sub{font-size:7px;letter-spacing:3px;margin-top:5px}}@media(max-width:700px){.brand{gap:11px;font-size:27px;margin-bottom:18px}.brand img{width:40px;height:40px}.brand-sub{font-size:8px;letter-spacing:4px;margin-top:6px}}
+/* iOS 12 fallbacks: vh and plain padding remain valid without dvh/env/max(). */
+dialog{display:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
+dialog[open]{display:block}
+.legacy-modal-overlay{position:fixed;z-index:100;top:0;right:0;bottom:0;left:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(0,0,0,.4);padding:10px}
+.legacy-modal-overlay dialog[open]{position:relative;top:auto;left:auto;margin:0 auto;max-height:none;overflow:visible}
+@media(max-width:700px){
+ aside{padding-top:16px;padding-left:16px;padding-right:16px}
+ main{padding:20px 16px}
+ .workflow-view main{padding-top:20px}
+ dialog{max-height:calc(100vh - 20px);max-height:calc(100dvh - 20px)}
+ .modal-actions{padding-bottom:14px}
+ #toast{bottom:20px;width:auto;min-width:240px}
+ /* Flex gap is unsupported in iOS 12. Margins keep navigation readable. */
+ nav{gap:0}nav button+button{margin-left:6px}
+ nav button svg{margin-right:6px}nav b{margin-left:6px}
+ .company-avatar{margin-right:10px}.company-cell{gap:0}
+ .search{gap:0}.search svg{margin-right:9px}
+ .phone{word-break:break-word}
+ .legacy-modal-overlay .modal-actions{position:static}
+}
+@supports(padding:max(0px)){@media(max-width:700px){
+ aside{padding-top:max(16px,env(safe-area-inset-top));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+ main{padding:20px max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+}}
+/* Team authentication and administrator workspace. */
+.auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px;background:#f7f7f7}
+.auth-card{width:100%;max-width:420px;padding:32px;background:#fff;border:1px solid #e4e4e4;border-radius:16px}
+.auth-card .brand{margin:0 0 32px}.auth-card h1{font-size:25px;line-height:1.3}.auth-card>p{font-size:14px;line-height:1.6}
+.auth-card form{margin-top:24px}.auth-card label{display:block;font-size:13px;font-weight:500;margin-bottom:18px}
+.auth-card input{display:block;width:100%;font-size:16px;padding:12px;min-height:46px;border:1px solid #ddd;border-radius:7px;margin-top:7px;background:#fff;color:#222}
+.auth-card small{font-size:12px;font-weight:400;color:#666;line-height:1.6;margin-top:6px}.auth-card .primary{width:100%;min-height:48px;font-size:14px}
+.auth-card .auth-help{margin-top:22px;font-size:12px}.form-message{color:#333;font-size:13px;line-height:1.6;margin:12px 0}.form-message:empty{display:none}
+.account-button{border:1px solid #ddd;background:#fff;color:#333;border-radius:6px;min-height:36px;padding:7px 10px;margin-left:6px;font-size:12px}
+.admin-section{background:#fff;border:1px solid #e4e4e4;border-radius:10px;padding:22px;margin-bottom:20px;min-width:0}.admin-section h2{font-size:17px;margin-bottom:8px}.admin-section>p,.admin-section-heading p{font-size:12px}
+.admin-section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.admin-section-heading .primary{min-height:44px}
+.status-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.status-summary>div{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f7f7f7;border:1px solid #eee;border-radius:6px;gap:8px;font-size:12px}.status-summary strong{font-size:17px}
+.admin-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:18px}.admin-table{min-width:650px}.admin-table th,.admin-table td{padding:13px 12px;font-size:12px}.admin-table th{font-size:10px}
+.team-user{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-top:1px solid #eee;gap:12px}.team-user strong{font-size:14px}.team-user small{font-size:12px;color:#666;margin-top:5px;overflow-wrap:break-word}.team-user-actions{display:flex;gap:8px}.team-user-actions .secondary{margin:0;min-height:40px}
+.activity-filters{display:flex;gap:12px;margin:20px 0}.activity-filters label{flex:1;font-size:12px}.activity-filters select{display:block;width:100%;padding:10px;border:1px solid #ddd;background:#fff;border-radius:6px;margin-top:6px;font-size:16px;min-height:44px}
+.activity-row{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 0;border-top:1px solid #eee;gap:16px;font-size:13px;line-height:1.7}.activity-row>div{min-width:0;overflow-wrap:break-word}.activity-row small{font-size:12px;color:#666}.activity-row time{flex-shrink:0;font-size:11px;color:#666}.activity-row p{margin-top:5px;white-space:pre-wrap}.activity-empty{padding:24px 0}
+dialog .outcome-check{display:flex;align-items:center;gap:10px;line-height:1.6;margin-top:18px}dialog .outcome-check input{width:22px;height:22px;min-width:22px;margin:0}.caller-label{color:#444!important;font-size:11px!important;line-height:1.5}.company-cell small.caller-label{display:block;-webkit-line-clamp:unset}
+@media(max-width:1000px){.status-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+ .auth-shell{align-items:flex-start;padding:24px 12px}.auth-card{padding:24px 20px}.auth-card .brand{margin-bottom:28px}
+ .header-right>span{display:none}.header-right{gap:0}.account-button{min-height:44px;font-size:11px;padding:7px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.breadcrumb{flex-shrink:0}.mobile-storage{display:none}
+ nav button{font-size:11px;padding-left:4px;padding-right:4px;min-width:0}nav button+button{margin-left:3px}nav button svg{display:none}nav b{margin-left:3px;font-size:9px}
+ .admin-section{padding:18px 14px}.admin-section-heading{gap:10px}.admin-section-heading .primary{font-size:12px;padding:10px}.status-summary{gap:8px}.status-summary>div{font-size:11px;padding:10px 8px}
+ .admin-table,.admin-table thead{display:table;white-space:nowrap}.admin-table thead{display:table-header-group}.admin-table tbody{display:table-row-group}.admin-table tbody tr{display:table-row;position:static;padding:0}.admin-table th,.admin-table td{display:table-cell!important;position:static!important;width:auto!important;padding:12px!important;font-size:11px}.admin-table th{font-size:9px}
+ .team-user{flex-direction:column;align-items:stretch}.team-user-actions .secondary{min-height:44px;flex:1;font-size:12px}.activity-filters{gap:10px}.activity-row{flex-direction:column;gap:5px}.activity-row time{font-size:11px}.activity-row small{font-size:12px}.activity-row p{font-size:13px}.caller-label{font-size:12px!important}
+}
+/* Keep team controls spaced in pre-flex-gap WebKit. */
+.team-user-actions,.activity-filters{gap:0}.team-user-actions .secondary+.secondary{margin-left:8px}.activity-filters label{min-width:0}.activity-filters label+label{margin-left:12px}
+.status-actor{margin-top:7px;font-size:11px;color:#555;white-space:normal;line-height:1.5;max-width:180px}.status-actor span{display:block;font-size:10px;color:#666}
+@media(max-width:700px){.status-actor{max-width:140px;font-size:11px}.status-actor span{font-size:10px}}
+/* Unknown <dialog> elements have no native background or positioning on iOS 12. */
+dialog{background:#fff}
+.legacy-modal-overlay{display:block;touch-action:pan-y}
+.legacy-modal-overlay dialog[open]{display:block;background:#fff;width:450px;max-width:100%;margin:0 auto 16px;max-height:none;box-shadow:0 10px 35px rgba(0,0,0,.2)}
+@media(max-width:700px){
+ .legacy-modal-overlay{padding:10px 8px}
+ .legacy-modal-overlay dialog[open]{width:100%;padding:18px 16px}
+ .legacy-modal-overlay .modal-top{margin-bottom:16px}
+ .legacy-modal-overlay .modal-actions{position:static;margin-top:16px;padding:12px 0 0}
+ /* Use margins for touch form spacing where flex gap is unavailable. */
+ .toolbar{gap:0}.toolbar>.filter{margin-top:9px}
+ .page-heading{gap:0}.page-heading>.primary{margin-top:14px}
+ .modal-actions{gap:0}.modal-actions>.primary{margin-left:10px}
+ .primary>svg,.secondary>svg{margin-right:7px}
+ .filter{gap:0}.filter>svg{margin-right:9px}
+ .stats{grid-gap:10px}.content-grid{grid-gap:18px}.right-column{grid-gap:15px}
+ .auth-shell{min-height:100%;padding:16px 12px}.auth-card{padding:22px 18px}
+ .auth-card .brand{margin-bottom:20px}.auth-card input{min-width:0;-webkit-appearance:none}
+ .auth-card input:focus{outline:2px solid #777;outline-offset:1px}
+}

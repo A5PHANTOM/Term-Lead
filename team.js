@@ -1,0 +1,61 @@
+import { showDialog } from './browser-compat.js';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const date = d => d ? new Date(d).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}) : '—';
+export async function request(path,method='GET',body) {
+ const response=await fetch(path,{method,credentials:'same-origin',cache:'no-store',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+ let result;try{result=await response.json();}catch{throw Error('Server unavailable. Please retry.');}
+ if(!response.ok){const error=Error(result.error||'Request failed.');error.status=response.status;throw error;}
+ return result;
+}
+export function loginScreen({setupRequired=false,adminEmail='',error=''}={},onLogin) {
+ document.querySelector('#app').innerHTML=`<div class="auth-shell"><section class="auth-card"><a class="brand" href="/"><img src="/logo.svg" width="40" height="40" alt=""><span>termjobs<span class="brand-sub">LEADS</span></span></a><h1>${setupRequired?'Set up your admin account':'Welcome back'}</h1><p>${setupRequired?'Create the first administrator to open your team workspace.':'Sign in to your team’s leads and conversations.'}</p><form id="login-form">${setupRequired?'<label>Your name<input name="name" autocomplete="name" required maxlength="100" value="Admin"></label>':''}<label>Email<input name="email" type="email" autocomplete="username" required value="${esc(setupRequired?adminEmail:'')}" ${setupRequired?'readonly':''}></label><label>Password<input name="password" type="password" autocomplete="${setupRequired?'new-password':'current-password'}" required minlength="${setupRequired?10:1}" maxlength="128"></label>${setupRequired?'<label>Setup key<input name="setupToken" type="password" autocomplete="off" required><small>Enter the one-time setup key supplied with your workspace.</small></label>':''}<p class="form-message" role="alert" id="login-error">${esc(error)}</p><button class="primary" type="submit">${setupRequired?'Create admin account':'Sign in'}</button></form><p class="auth-help">${setupRequired?'Your existing leads will remain in the workspace.':'Need an account or a password reset? Contact your administrator.'}</p></section></div>`;
+ const form=document.querySelector('#login-form');
+ form.onsubmit=async event=>{
+  event.preventDefault();const button=form.querySelector('button');button.disabled=true;
+  try{
+   const values={action:setupRequired?'setup':'login',email:form.elements.email.value,password:form.elements.password.value};
+   if(setupRequired){values.name=form.elements.name.value;values.setupToken=form.elements.setupToken.value;}
+   const result=await request('/api/auth','POST',values);await onLogin(result.user);
+  }catch(error){document.querySelector('#login-error').textContent=error.message;button.disabled=false;}
+ };
+}
+export function activityMarkup(items) {
+ if(!items.length)return '<p class="activity-empty">No activity recorded yet.</p>';
+ return items.map(a=>`<article class="activity-row"><div><strong>${esc(a.user_name)}</strong> <span>${a.kind==='call'?'started a call to':a.kind==='outcome'?'logged a call outcome for':a.kind==='create'?'added':a.kind==='delete'?'deleted':a.previous_status&&a.previous_status!==a.status?'changed the status of':'updated'} <strong>${esc(a.company)}</strong></span><small>${esc(a.phone)}${a.kind!=='call' && a.status?' · '+esc(a.status):''}${a.previous_status && a.previous_status!==a.status?' (was '+esc(a.previous_status)+')':''}</small>${a.kind==='outcome'&&a.notes?`<p>${esc(a.notes)}</p>`:''}</div><time datetime="${esc(a.created_at)}">${date(a.created_at)}</time></article>`).join('');
+}
+export async function showHistory(lead,modal) {
+ modal.innerHTML=`<div class="modal-top"><h2>Conversation history</h2><button type="button" class="icon-button close" aria-label="Close">×</button></div><p>${esc(lead.company)} · ${esc(lead.phone)}</p><p>Most recent 100 entries.</p><div id="lead-history" aria-live="polite">Loading activity…</div>`;
+ showDialog(modal);modal.querySelector('.close').onclick=()=>modal.close();
+ try{const activity=await request('/api/leads?history='+encodeURIComponent(lead.id));if(modal.hasAttribute('open'))modal.querySelector('#lead-history').innerHTML=activityMarkup(activity);}
+ catch(error){const target=modal.querySelector('#lead-history');if(target)target.textContent=error.message;}
+}
+export function changePassword(modal,minLength=10) {
+ modal.innerHTML=`<form id="password-form"><div class="modal-top"><h2>Change password</h2><button type="button" class="icon-button close" aria-label="Close">×</button></div><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New password<input name="password" type="password" autocomplete="new-password" required minlength="${minLength}" maxlength="128"><small>${minLength===1?'At least 1 character.':'At least 10 characters.'}</small></label><p class="form-message" role="status"></p><button class="primary" type="submit">Update password</button></form>`;
+ showDialog(modal);modal.querySelector('.close').onclick=()=>modal.close();
+ const form=modal.querySelector('form');form.onsubmit=async event=>{event.preventDefault();const button=form.querySelector('[type=submit]');button.disabled=true;try{await request('/api/auth','POST',{action:'password',currentPassword:form.elements.currentPassword.value,password:form.elements.password.value});modal.close();}catch(error){form.querySelector('.form-message').textContent=error.message;button.disabled=false;}};
+}
+export async function adminPanel(container,leads,onExpired) {
+ container.innerHTML='<div class="admin-loading" role="status">Loading team dashboard…</div>';
+ try {
+  const [data,currentLeads]=await Promise.all([request('/api/admin'),request('/api/leads')]);
+  leads=currentLeads;
+  if(!document.contains(container))return;
+  const calls=data.summary.reduce((sum,u)=>sum+Number(u.calls_today),0);
+  const callback=leads.filter(l=>l.status==='Call back later').length;
+  const interested=leads.filter(l=>l.status==='Interested').length;
+  container.innerHTML=`<div class="page-heading"><div><div class="eyebrow">TEAM WORKSPACE</div><h1>Admin dashboard</h1><p>Call activity, lead outcomes and your team in one place.</p></div><button class="secondary" id="refresh-admin">Refresh dashboard</button></div><div class="stats">${[['Total leads',leads.length],['Call attempts today',calls],['Interested leads',interested],['Callbacks',callback]].map(([title,value])=>`<div class="stat"><div class="stat-top">${title}</div><strong>${value}</strong></div>`).join('')}</div><section class="admin-section"><h2>Lead status</h2><div class="status-summary">${['Not called','Picked up','Hung up','Not attended','Interested','Not interested','Call back later','Busy'].map(status=>`<div><span>${status}</span><strong>${leads.filter(l=>l.status===status).length}</strong></div>`).join('')}</div></section><section class="admin-section"><h2>Caller performance</h2><p>Call attempts are number taps. Outcomes are saved call reports. Today follows India time.</p><div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>PERSON</th><th>ATTEMPTS TODAY</th><th>ALL ATTEMPTS</th><th>OUTCOMES</th><th>INTERESTED OUTCOMES</th><th>LAST ACTIVITY</th></tr></thead><tbody>${data.summary.map(u=>`<tr><td><strong>${esc(u.name)}</strong></td><td>${u.calls_today}</td><td>${u.calls}</td><td>${u.outcomes}</td><td>${u.interested}</td><td>${date(u.last_activity)}</td></tr>`).join('')}</tbody></table></div></section><section class="admin-section"><div class="admin-section-heading"><div><h2>Team accounts</h2><p>Create separate staff logins and manage access.</p></div><button class="primary" id="new-user">Add staff</button></div><div class="team-users">${data.users.map(u=>`<div class="team-user"><div><strong>${esc(u.name)}</strong><small>${esc(u.email)} · ${u.role==='admin'?'Admin':u.active?'Staff':'Disabled'}</small></div><div class="team-user-actions">${u.role==='staff'?`<button class="secondary reset-user" data-id="${esc(u.id)}">Reset password</button><button class="secondary toggle-user" data-id="${esc(u.id)}" data-active="${u.active}">${u.active?'Disable':'Enable'}</button>`:''}</div></div>`).join('')}</div></section><section class="admin-section"><h2>Recent team activity</h2><p>Latest 200 entries. Each lead also has its own activity history.</p><div class="activity-filters"><label>Person<select id="activity-person"><option value="">Everyone</option>${data.users.map(u=>`<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('')}</select></label><label>Activity<select id="activity-kind"><option value="">All activity</option><option value="call">Call attempts</option><option value="outcome">Call outcomes</option><option value="status">Status changes</option><option value="update">Lead updates</option><option value="create">New leads</option><option value="delete">Deleted leads</option></select></label></div><div id="team-activity">${activityMarkup(data.activity)}</div></section><p class="form-message" id="admin-message" role="alert"></p>`;
+  const refresh=()=>adminPanel(container,leads,onExpired);
+  container.querySelector('#refresh-admin').onclick=refresh;
+  const filter=()=>{const person=container.querySelector('#activity-person').value,kind=container.querySelector('#activity-kind').value;container.querySelector('#team-activity').innerHTML=activityMarkup(data.activity.filter(a=>(!person||a.user_id===person)&&(!kind||(kind==='status'?a.previous_status!=null&&a.status!==a.previous_status:a.kind===kind))));};
+  container.querySelectorAll('.activity-filters select').forEach(s=>s.onchange=filter);
+  container.querySelector('#new-user').onclick=()=>accountForm(null,refresh,onExpired);
+  container.querySelectorAll('.reset-user').forEach(b=>b.onclick=()=>accountForm(data.users.find(u=>u.id===b.dataset.id),refresh,onExpired));
+  container.querySelectorAll('.toggle-user').forEach(b=>b.onclick=async()=>{b.disabled=true;try{await request('/api/admin','PATCH',{id:b.dataset.id,action:'active',active:b.dataset.active!=='true'});await refresh();}catch(error){container.querySelector('#admin-message').textContent=error.message;b.disabled=false;if(error.status===401)onExpired();}});
+ }catch(error){if(error.status===401){onExpired();return;}container.innerHTML=`<p class="form-message" role="alert">${esc(error.message)}</p><button class="secondary" id="retry-admin">Retry</button>`;container.querySelector('#retry-admin').onclick=()=>adminPanel(container,leads,onExpired);}
+}
+function accountForm(user,onSaved,onExpired) {
+ const modal=document.querySelector('#modal');
+ modal.innerHTML=`<form id="account-form"><div class="modal-top"><h2>${user?'Reset staff password':'Add staff account'}</h2><button type="button" class="icon-button close" aria-label="Close">×</button></div>${user?`<p>${esc(user.name)} · ${esc(user.email)}</p>`:'<label>Name<input name="name" autocomplete="off" required maxlength="100"></label><label>Email<input name="email" type="email" autocomplete="off" required maxlength="254"></label>'}<label>${user?'New password':'Initial password'}<input name="password" type="password" autocomplete="new-password" required minlength="1" maxlength="128"><small>At least 1 character. Share it privately with this staff member. They can change it after signing in.</small></label><p class="form-message" role="alert"></p><div class="modal-actions"><span></span><button class="primary" type="submit">${user?'Reset password':'Create staff account'}</button></div></form>`;
+ showDialog(modal);modal.querySelector('.close').onclick=()=>modal.close();
+ const form=modal.querySelector('form');form.onsubmit=async event=>{event.preventDefault();const button=form.querySelector('[type=submit]');button.disabled=true;try{await request('/api/admin',user?'PATCH':'POST',user?{id:user.id,action:'password',password:form.elements.password.value}:{name:form.elements.name.value,email:form.elements.email.value,password:form.elements.password.value});modal.close();onSaved();}catch(error){form.querySelector('.form-message').textContent=error.message;button.disabled=false;if(error.status===401){modal.close();onExpired();}}};
+}
